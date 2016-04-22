@@ -1,6 +1,6 @@
 '''
 #=============================================================================
-#     FileName: analyzer.py
+#     FileName: email_syntax_validator.py
 #       Author: Archit Kapoor
 #        Email: archit.imsec10@gmail.com
 #=============================================================================
@@ -31,16 +31,20 @@ class EmailSyntaxValidator:
     def __init__(self):
         pass
 
+    
+    def validate_email(self):
+        ## Todo: call the various (private) validator methods internally from this method.
+        pass
 
-    def validate_by_rfc822(self):
+    def _validate_by_rfc822(self):
         pass
 
 
 
-    def validate_by_rfc5321(self):
+    def _validate_by_rfc5321(self):
         pass
 
 
 
-    def validate_by_rfc6531(self):
+    def _validate_by_rfc6531(self):
         pass
