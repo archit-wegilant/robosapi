@@ -56,21 +56,28 @@ def main():
         print "Usage: <cmd> <remote_file_path_to_json_file> "
 
         ## Todo call Watchdog to update Error Message in the Db before exiting.
-        sys.exit()  ## Check if multiple objects are instanciated as the same time, will it kill all the objects?
+        sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
 
     remote_file_path_to_json = sys.argv[1]
 
+    json_file_fetched_successfully = False
     try:
         ## Try to fetch the remote json file present at the file path given by remote_file_path_to_json
+
+        ## If the json file is fetched, then before leaving the try-except block, set json_file_fetched_successfully to True
+        json_file_fetched_successfully = True
         pass
         
     except Exception as e:
         print e
         ## Todo call Watchdog to update Error Message in the Db before exiting.
-        sys.exit()  ## Check if multiple objects are instanciated as the same time, will it kill all the objects?
+        sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
     
+    if json_file_fetched_successfully:
 
+        analyzer_object = Analyzer(remote_file_path_to_json)    ## Instantiating the Analyzer object
 
+        
 ## Boiler-plate
 if __name__ == "__main__":
     main()
