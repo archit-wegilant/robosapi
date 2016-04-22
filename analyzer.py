@@ -9,12 +9,14 @@
 import sys
 import os
 import json
+import logging
 
 
 class Analyzer:
     """
 
     This is the starting point of the CSV-analyzer application.
+    This application is initiated by passing in a commond line argument which corresponds to the file path of the json file present at the calling PHP Server.
     
     """
 
@@ -43,16 +45,30 @@ class Analyzer:
         pass
 
 
+def set_logging_context:
+    ## Todo: Set logging context
+    pass
+
+
 def main():
 
     if len(sys.argv) < 1:
         print "Usage: <cmd> <remote_file_path_to_json_file> "
 
         ## Todo call Watchdog to update Error Message in the Db before exiting.
-        sys.exit()
+        sys.exit()  ## Check if multiple objects are instanciated as the same time, will it kill all the objects?
 
     remote_file_path_to_json = sys.argv[1]
 
+    try:
+        ## Try to fetch the remote json file present at the file path given by remote_file_path_to_json
+        pass
+        
+    except Exception as e:
+        print e
+        ## Todo call Watchdog to update Error Message in the Db before exiting.
+        sys.exit()  ## Check if multiple objects are instanciated as the same time, will it kill all the objects?
+    
 
 
 ## Boiler-plate
