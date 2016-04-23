@@ -31,20 +31,73 @@ class EmailSyntaxValidator:
     def __init__(self):
         pass
 
-    
-    def validate_email(self):
-        ## Todo: call the various (private) validator methods internally from this method.
+    @staticmethod
+    def validate_email(self, email = None):
+        """
+
+        The method takes an email id/email address, and verifies whether it is a valid email address
+        or not according to various RFC Formats.
+        It returns a boolean value(True/False) depending on the result of the various checks it makes by
+        calling internally calling private methods _validate_by_rfc822(), _validate_by_rfc5321(), _validate_by_rfc6531().
+
+        This is a static method, meaning this method can be invoked directly without creating an object for this class.
+        
+        """
+
+        if email is not None:
+            email = str(email)  ## TODO: str() method will faulter for unicode email addresses. So, add support for UTF-8 and remove str() function.
+            email = email.strip()
+            ## TODO: call the various (private) validator methods internally from this method.
+            valid_by_rfc822 = self._validate_by_rfc822(email)
+            if not valid_by_rfc822:
+                valid_by_rfc5321 = self._validate_by_rfc5321(email)
+                if not valid_by_rfc5321:
+                    valid_by_rfc6531 = self._validate_by_rfc6531(email)
+                    
+                    return valid_by_rfc6531
+                
+                else:
+                    return True
+                
+            else:
+                return True
+            
+         else:
+             return None
+            
         pass
+    
 
     def _validate_by_rfc822(self):
+        """
+        
+        This is a private method. It validates an email address/id against RFC-822 standard.
+
+        Return value: a boolean value - True/False
+
+        """
         pass
 
 
 
     def _validate_by_rfc5321(self):
+        """
+        
+        This is a private method. It validates an email address/id against RFC-5321 standard.
+
+        Return value: a boolean value - True/False
+
+        """
         pass
 
 
 
     def _validate_by_rfc6531(self):
+        """
+        
+        This is a private method. It validates an email address/id against RFC-6531 standard.
+
+        Return value: a boolean value - True/False
+
+        """
         pass
