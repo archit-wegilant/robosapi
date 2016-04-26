@@ -44,6 +44,18 @@ class Analyzer:
         self.request_type = None
 
     def fetch_json_from_remote(self):
+        """
+
+        This method fetches the json file from the PHP Server by making a GET request call to the remote url provided.
+        Currently, it fetches the json file using the request method present in the httplib2 module. In future, replace this with get method of requests module.
+        Then, if the response code is greater than or equal to 400, then the Watchdog is updated with proper error message/code and False is returned.
+        If the JSON file is fetched successfully, then True is returned otherwise False.
+        The fetched JSON is stored in fetched_json instance variable of this class.
+
+        Return values: True/False
+
+        """
+        
         try:
             http_object = httplib2.Http()
             url = self.remote_url_path_to_json
@@ -70,6 +82,27 @@ class Analyzer:
 
 
     def parse_json(self):
+        """
+
+        This method parses the fetched JSON. The JSON file should contain the following keys with their values:
+        1. customer_id
+        2. job_id
+        3. sub_job_id
+        4. batch_size
+        5. thread_count
+        6. file_location
+        7. record_count
+        8. file_checksum
+        9. file_type
+        10. time_stamp
+        11. expire_validation
+        12. python_server_id
+        13. app_url
+        14. request_type
+
+        Return values: True/False
+
+        """
         try:
             self.customer_id = self.fetched_json['customer_id']
             self.job_id = self.fetched_json['job_id']
@@ -97,7 +130,18 @@ class Analyzer:
             return False
 
     def compare_python_server_id(self):
-        pass
+        """
+
+        This method is used to check whether the request has been made to the correct Python server. In future, there could be multiple Python servers.
+        To make sure that the PHP Server has made the request to the correct Python server, a python_server_id is compared.
+        The fetched JSON contains a python_server_id which is a Numerical value. Then the python_server_id for this current machine/server is retrieved
+        from the Database/config file. As of now, it is defaulted to 1.
+        
+        """
+        # TODO: Write the logic to fetch python server ID from the Db
+        python_server_id_for_this_machine = 1
+        
+        return (python_server_id_for_this_machine == self.python_server_id)
 
 
     def compare_csv_checksum(self):
@@ -137,15 +181,16 @@ def main():
         sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
     
     if json_file_fetched_successfully:
-        ## TODO list:
-        ## 1. Parse the fetched json file, which is present locally, by calling parse_json method,
-        json_file_parsed_successfully = analyzer_object.parse_json()       
+        json_file_parsed_successfully = analyzer_object.parse_json()    ## 1. Parse the fetched json file, which is present locally, by calling parse_json() method
 
         if json_file_parsed_successfully:
-            ## 2. Match python server id by calling compare_python_server_id method,
-            ## 3. Fetch the csv file from remote by calling fetch_csv_from_remote method,
-            ## 4. Compare the checksum of the csv file, by calling compare_csv_checksum method
-            pass
+            python_server_id_matched = analyzer_object.compare_python_server_id()   ## 2. Match python server id by calling compare_python_server_id method,
+
+            if python_server_id_matched:
+                ## TODO list:
+                ## 3. Fetch the csv file from remote by calling fetch_csv_from_remote method,
+                ## 4. Compare the checksum of the csv file, by calling compare_csv_checksum method
+                pass
 
         else:
             ## TODO call Watchdog to update Error Message in the Db before exiting.
