@@ -83,10 +83,12 @@ class Analyzer:
         """
 
         This method fetches the CSV file over HTTP by making a GET request to the PHP Server which has hosted the CSV File.
-        The url path to the CSV has been provided in the JSON file.
-        
+        The url path to the CSV has been provided in the JSON file. Depending on whether the CSV file is successfully fetched or not, a True/False value is returned.
+
+        Return values: True/False        
+
         """
-            try:
+        try:
             http_object = httplib2.Http()
             url = self.csv_file_location
 
@@ -162,6 +164,8 @@ class Analyzer:
         To make sure that the PHP Server has made the request to the correct Python server, a python_server_id is compared.
         The fetched JSON contains a python_server_id which is a Numerical value. Then the python_server_id for this current machine/server is retrieved
         from the Database/config file using the IP Address of the current machine. As of now, it is defaulted to 1.
+
+        Return values: True/False
         
         """
         # TODO: Write the logic to fetch python server ID from the Db
@@ -172,8 +176,33 @@ class Analyzer:
         return (python_server_id_for_this_machine == self.python_server_id)
 
 
-    def compare_csv_checksum(self):
+    def _calculate_checksum_of_csv(self):
+
+        """
+
+        This is a private method. 
+        This method calculates the Checksum of the CSV file and compares it with the checksum of the CSV file received in the JSON.
+        This method is left for future implementation until a decision is made as to use which checksum algorithm/function.
+        Currently it left blank.
+
+        """
         pass
+
+
+    def compare_csv_checksum(self):
+        """
+
+        This method compares the Checksum of the fetched CSV to ensure it is well received.
+        Internally it calls _calculate_checksum_of_csv() method to get the checksum of the obtained CSV and comapares it with self.file_checksum.
+        This method just ensures that the CSV file is received as-is and is not malformed or broken in between the transfer.
+        Currently this method returns True only.
+
+        Return values: True/False
+        
+        """
+        checksum_of_fetched_csv = self._calculate_checksum_of_csv()
+        ## return checksum_of_fetched_csv == self.file_checksum
+        return True
 
 
 def set_logging_context():
@@ -205,39 +234,46 @@ def main():
         
     except Exception as e:
         print e
-        ## TODO call Watchdog to update Error Message in the Db before exiting.
+        ## TODO: call Watchdog to update Error Message in the Db before exiting.
         sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
     
     if json_file_fetched_successfully:
         json_file_parsed_successfully = analyzer_object.parse_json()    ## 1. Parse the fetched json file, which is present locally, by calling parse_json() method
 
         if json_file_parsed_successfully:
-            python_server_id_matched = analyzer_object.compare_python_server_id()   ## 2. Match python server id by calling compare_python_server_id method,
+            python_server_id_matched = analyzer_object.compare_python_server_id()   ## 2. Match python server id by calling compare_python_server_id() method,
 
             if python_server_id_matched:
-                ## 3. Fetch the csv file from remote by calling fetch_csv_from_remote method,
-                csv_fetched_successfully = fetch_csv_from_remote()
+                csv_fetched_successfully = fetch_csv_from_remote()  ## 3. Fetch the csv file from remote by calling fetch_csv_from_remote() method,
 
                 if csv_fetched_successfully:
-                    ## TODO list:
-                    ## 4. Compare the checksum of the csv file, by calling compare_csv_checksum method
-                    pass
+                    csv_checksum_match_successful = analyzer_object.compare_csv_checksum()  ## 4. Compare the checksum of the csv file, by calling compare_csv_checksum() method
+
+                    if csv_checksum_match_successful:
+                        ## TODO list:
+                        ## 5. Update the Watchdog that processing of the CSV has started.
+                        ## 6. Forward the CSV to the processor for making Threads.
+                        pass
+
+                    else:
+                        ## TODO: call Watchdog to update Error Message in the Db before exiting. Here, the checksum of the CSV file did not match. CSV is either incomplete, malformed or broken or any other reason.
+                        sys.exit()
 
                 else:
-                    ## TODO call Watchdog to update Error Message in the Db before exiting.
-                    sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
+                    ## TODO: call Watchdog to update Error Message in the Db before exiting. Here, the CSV file is not fetched successfully from the PHP Server.
+                    sys.exit()
 
             else:
-                ## TODO call Watchdog to update Error Message in the Db before exiting.
-                sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
+                ## TODO: call Watchdog to update Error Message in the Db before exiting. Here, the python_server_id does not not match. The call is not for dedicated for this server.
+                sys.exit()
 
         else:
-            ## TODO call Watchdog to update Error Message in the Db before exiting.
-            sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
+            ## TODO: call Watchdog to update Error Message in the Db before exiting. Here, the JSON file fetched is not parsed successfully, could be malformed. 
+            sys.exit()
 
     else:
-        ## TODO call Watchdog to update Error Message in the Db before exiting.
-        sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
+        ## TODO: call Watchdog to update Error Message in the Db before exiting. Here, JSON file is not fetched successfully.
+        sys.exit()
             
         
 ## Boiler-plate
