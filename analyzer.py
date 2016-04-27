@@ -9,10 +9,11 @@
 import sys
 import os
 import json
+import csv
 import logging
 import requests
 import httplib2
-
+import socket
 
 class Analyzer:
     """
@@ -27,13 +28,14 @@ class Analyzer:
         self.remote_url_path_to_json = remote_url_path_to_json
 
         self.fetched_json = None
+        self.fetched_csv = None ## Contains the actual data, in a CSV format which to be worked upon!
 
         self.customer_id = None
         self.job_id = None
         self.sub_job_id = None
         self.batch_size = None
         self.thread_count = None
-        self.file_location = None
+        self.csv_file_location = None
         self.record_count = None
         self.file_checksum = None
         self.file_type = None
@@ -67,9 +69,9 @@ class Analyzer:
                 # Update Watchdog with Error message
                 return False
             
-            result_as_json = json.loads(content)
+            content_as_json = json.loads(content)
 
-            self.fetched_json = result_as_json
+            self.fetched_json = content_as_json
             return True
         
         except Exception as e:
@@ -78,7 +80,31 @@ class Analyzer:
 
 
     def fetch_csv_from_remote(self):
-        pass
+        """
+
+        This method fetches the CSV file over HTTP by making a GET request to the PHP Server which has hosted the CSV File.
+        The url path to the CSV has been provided in the JSON file.
+        
+        """
+            try:
+            http_object = httplib2.Http()
+            url = self.csv_file_location
+
+            # Fetching the JSON by making a GET Request to the PHP Server.
+            response, content = http_object.request(url,'GET')
+
+            if response.status >= 400:  # When the json is not fetched due to some reason
+                # Update Watchdog with Error message
+                return False
+            
+            content_as_csv = csv.reader(content)
+
+            self.fetched_csv = content_as_csv
+            return True
+        
+        except Exception as e:
+            print e # TODO: Remove print statement and log the error in the log file including in it the error object 'e'
+            return False
 
 
     def parse_json(self):
@@ -109,7 +135,7 @@ class Analyzer:
             self.sub_job_id = self.fetched_json['sub_job_id']
             self.batch_size = self.fetched_json['batch_size']
             self.thread_count = self.fetched_json['thread_count']
-            self.file_location = self.fetched_json['file_location']
+            self.csv_file_location = self.fetched_json['file_location']
             self.record_count = self.fetched_json['record_count']
             self.file_checksum = self.fetched_json['file_checksum']
             self.file_type = self.fetched_json['file_type']
@@ -135,10 +161,12 @@ class Analyzer:
         This method is used to check whether the request has been made to the correct Python server. In future, there could be multiple Python servers.
         To make sure that the PHP Server has made the request to the correct Python server, a python_server_id is compared.
         The fetched JSON contains a python_server_id which is a Numerical value. Then the python_server_id for this current machine/server is retrieved
-        from the Database/config file. As of now, it is defaulted to 1.
+        from the Database/config file using the IP Address of the current machine. As of now, it is defaulted to 1.
         
         """
         # TODO: Write the logic to fetch python server ID from the Db
+        current_machine_IP_Address = socket.gethostbyname(socket.gethostname())
+        # Fetch the python_server_id for this IP Address.
         python_server_id_for_this_machine = 1
         
         return (python_server_id_for_this_machine == self.python_server_id)
@@ -187,14 +215,29 @@ def main():
             python_server_id_matched = analyzer_object.compare_python_server_id()   ## 2. Match python server id by calling compare_python_server_id method,
 
             if python_server_id_matched:
-                ## TODO list:
                 ## 3. Fetch the csv file from remote by calling fetch_csv_from_remote method,
-                ## 4. Compare the checksum of the csv file, by calling compare_csv_checksum method
-                pass
+                csv_fetched_successfully = fetch_csv_from_remote()
+
+                if csv_fetched_successfully:
+                    ## TODO list:
+                    ## 4. Compare the checksum of the csv file, by calling compare_csv_checksum method
+                    pass
+
+                else:
+                    ## TODO call Watchdog to update Error Message in the Db before exiting.
+                    sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
+
+            else:
+                ## TODO call Watchdog to update Error Message in the Db before exiting.
+                sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
 
         else:
             ## TODO call Watchdog to update Error Message in the Db before exiting.
             sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
+
+    else:
+        ## TODO call Watchdog to update Error Message in the Db before exiting.
+        sys.exit()  ## Check if multiple objects are instantiated as the same time, will it kill all the objects?
             
         
 ## Boiler-plate
